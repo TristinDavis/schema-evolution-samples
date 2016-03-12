@@ -23,6 +23,12 @@
 		<spring-cloud-connectors.version>1.2.0.RC1</spring-cloud-connectors.version>
 		<avro.version>1.7.7</avro.version>
 	</properties>
+	<dependencies>
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-stream</artifactId>
+		</dependency>
+	</dependencies>
 	<repositories>
 		<repository>
 			<id>spring-snapshots</id>
