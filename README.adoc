@@ -1,0 +1,59 @@
+= Spring cloud stream schema evolution samples
+
+== Introduction
+
+The goal of this tutorial is to discuss how can one design
+robust data microservices (or data streams depending on how you apply the ideas of this tutorial)
+that can cope with the evolution of data.
+
+This topic has been discussed by https://martin.kleppmann.com/2012/12/05/schema-evolution-in-avro-protocol-buffers-thrift.html[Martin Kleppmann : schema-evolution-in-avro-protocol-buffers-thrift], and his book
+: http://dataintensive.net/[Designing data intensive applications] has an entire chapter on the subject.
+
+Our intention is to demonstrate how could we apply those lessons using http://cloud.spring.io/spring-cloud-stream/[Spring Cloud Stream] to create robust evolutionary data microservices.
+
+We will discuss the different level of schema evolution different data representation models offer, such as Avro, XML and JSON.
+
+== The problem
+
+In our sample application we create an imaginary sensor event (based on the android sensor framework) which model has evolved between two
+versions. You can see the difference of each model bellow:
+[source,java]
+----
+public class Sensor {
+	private String id;
+	private float temperature;
+	private float velocity;
+	private float acceleration;
+	private float[] accelerometer;
+	private float[] magneticField;
+	private float[] orientation;
+}
+----
+
+[source,java]
+----
+public class Sensor {
+	private String id;
+	private float internalTemperature; #<1>
+	private float externalTemperature; #<2>
+	private float velocity;
+	private float acceleration;
+	private float[] accelerometer;
+	private float[] magneticField; #<3>
+
+}
+----
+<1> The temperature field has been renamed to internalTemperature
+<2> An extra field has been added
+<3> The field orientation has been deprecated and its missing
+
+In order to our system to be resilient to these changes it needs to be able to react
+to three different changes on our model:
+
+1. Field name change
+2. Field addition
+3. Field removal
+
+Textual representations such as XML and JSON can deal quite easily with '2', as previous
+versions of your services could simply ignore the new fields. Dealing with removal and alias is sometimes more
+complex on those encodings.
