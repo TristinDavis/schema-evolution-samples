@@ -2,20 +2,19 @@
 
 == Introduction
 
-The goal of this tutorial is to discuss how can one design
-robust data microservices (or data streams depending on how you apply the ideas of this tutorial)
-that can cope with the evolution of data.
+The goal of this tutorial is to discuss approaches to achieve resilient data microservices (or data streams)
+that can cope with the evolution of the data that flows through it.
 
-This topic has been discussed by https://martin.kleppmann.com/2012/12/05/schema-evolution-in-avro-protocol-buffers-thrift.html[Martin Kleppmann : schema-evolution-in-avro-protocol-buffers-thrift], and his book
+The schema evolution topic has been discussed by https://martin.kleppmann.com/2012/12/05/schema-evolution-in-avro-protocol-buffers-thrift.html[Martin Kleppmann : schema-evolution-in-avro-protocol-buffers-thrift], and his book
 : http://dataintensive.net/[Designing data intensive applications] has an entire chapter on the subject.
 
 Our intention is to demonstrate how could we apply those lessons using http://cloud.spring.io/spring-cloud-stream/[Spring Cloud Stream] to create robust evolutionary data microservices.
 
-We will discuss the different level of schema evolution different data representation models offer, such as Avro, XML and JSON.
+Our proposed solution is to use a combination of a Schema Repository and specific serialization frameworks that can support different levels of schema evolution.
 
 == The problem
 
-In our sample application we create an imaginary sensor event (based on the android sensor framework) which model has evolved between two
+In our sample application we create an imaginary sensor data event (based on the android sensor framework), which schema has evolved between two
 versions. You can see the difference of each model bellow:
 [source,java]
 ----

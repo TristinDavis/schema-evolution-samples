@@ -11,6 +11,7 @@
 	<modules>
 		<module>producer_v1</module>
 		<module>producer_v2</module>
+		<module>avro-codec</module>
 	</modules>
 	<parent>
 		<groupId>org.springframework.cloud</groupId>
@@ -21,7 +22,7 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<java.version>1.8</java.version>
 		<spring-cloud-connectors.version>1.2.0.RC1</spring-cloud-connectors.version>
-		<avro.version>1.7.7</avro.version>
+		<avro.version>1.8.0</avro.version>
 	</properties>
 	<dependencies>
 		<dependency>
