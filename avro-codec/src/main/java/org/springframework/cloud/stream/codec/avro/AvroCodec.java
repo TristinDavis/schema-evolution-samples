@@ -7,6 +7,7 @@ import java.io.OutputStream;
 import java.nio.ByteBuffer;
 
 import org.apache.avro.Schema;
+import org.apache.avro.generic.GenericContainer;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.generic.GenericRecord;
@@ -18,6 +19,8 @@ import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.avro.specific.SpecificDatumWriter;
 import org.apache.commons.compress.utils.IOUtils;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.stream.schema.SchemaRegistryClient;
 import org.springframework.integration.codec.Codec;
 import org.springframework.util.Assert;
 
@@ -25,8 +28,14 @@ import org.springframework.util.Assert;
  * @author Vinicius Carvalho
  */
 public class AvroCodec implements Codec {
+
+	@Autowired
+	private SchemaRegistryClient schemaRegistryClient;
+
 	@Override
 	public void encode(Object object, OutputStream outputStream) throws IOException {
+		Schema schema = getSchema(object);
+
 		DatumWriter writer = getDatumWriter(object.getClass());
 		Encoder encoder = EncoderFactory.get().binaryEncoder(outputStream, null);
 
@@ -37,6 +46,7 @@ public class AvroCodec implements Codec {
 	public byte[] encode(Object o) throws IOException {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		encode(o,baos);
+
 		return baos.toByteArray();
 	}
 
@@ -64,7 +74,10 @@ public class AvroCodec implements Codec {
 		return (GenericRecord.class.isAssignableFrom(type)) ? new GenericDatumReader<>() : new SpecificDatumReader<>(type);
 	}
 
-	private Schema  getSchema(int id){
+	private Schema  getSchema(Object payload){
+		if(GenericContainer.class.isAssignableFrom(payload.getClass()))
+			return ((GenericContainer)payload).getSchema();
+		//else find schema from local avro files in resource, use class fqn to find which schema maps
 		return null;
 	}
 }

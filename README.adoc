@@ -56,3 +56,147 @@ to three different changes on our model:
 Textual representations such as XML and JSON can deal quite easily with '2', as previous
 versions of your services could simply ignore the new fields. Dealing with removal and alias is sometimes more
 complex on those encodings.
+
+== Avro serialization recap
+
+At it's core, avro relies on a schema definition file in order to be able to read and write data. The schema definition
+for our Sensor data looks like this:
+
+[source,json]
+----
+{
+  "namespace" : "io.igx.android",
+  "type" : "record",
+  "name" : "Sensor",
+  "fields" : [
+    {"name":"id","type":"string"},
+    {"name":"temperature", "type":"float", "default":0.0},
+    {"name":"acceleration", "type":"float","default":0.0},
+    {"name":"velocity","type":"float","default":0.0},
+    {"name":"accelerometer","type":[
+      "null",{
+        "type":"array",
+        "items":"float"
+      }
+    ]},
+    {"name":"magneticField","type":[
+      "null",{
+        "type":"array",
+        "items":"float"
+      }
+    ]},
+    {"name":"orientation","type":[
+      "null",{
+        "type":"array",
+        "items":"float"
+      }
+    ]}
+
+  ]
+
+}
+----
+
+When it comes to Serialize/Deserialize data we have a couple of options when using avro
+
+=== Generated sources with specific writer
+
+In this mode, you need to generate the source file that maps to the schema. There's very good
+support for maven plugins, this along with a good IDE will make very easy to generate the sources
+without polluting your codebase.
+
+The following is a snippet of the generated `Sensor.java` class.
+
+[source,java]
+----
+public class Sensor extends org.apache.avro.specific.SpecificRecordBase implements org.apache.avro.specific.SpecificRecord {
+  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"Sensor\",\"namespace\":\"io.igx.android\",\"fields\":[{\"name\":\"id\",\"type\":\"string\"},{\"name\":\"temperature\",\"type\":\"float\",\"default\":0.0},{\"name\":\"acceleration\",\"type\":\"float\",\"default\":0.0},{\"name\":\"velocity\",\"type\":\"float\",\"default\":0.0},{\"name\":\"accelerometer\",\"type\":[\"null\",{\"type\":\"array\",\"items\":\"float\"}]},{\"name\":\"magneticField\",\"type\":[\"null\",{\"type\":\"array\",\"items\":\"float\"}]},{\"name\":\"orientation\",\"type\":[\"null\",{\"type\":\"array\",\"items\":\"float\"}]}]}");
+  public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
+  @Deprecated public java.lang.CharSequence id;
+  @Deprecated public float temperature;
+  @Deprecated public float acceleration;
+  @Deprecated public float velocity;
+  @Deprecated public java.util.List<java.lang.Float> accelerometer;
+  @Deprecated public java.util.List<java.lang.Float> magneticField;
+  @Deprecated public java.util.List<java.lang.Float> orientation;
+
+  /**
+   * Default constructor.  Note that this does not initialize fields
+   * to their default values from the schema.  If that is desired then
+   * one should use <code>newBuilder()</code>.
+   */
+  public Sensor() {}
+
+  /**
+   * All-args constructor.
+   */
+  public Sensor(java.lang.CharSequence id, java.lang.Float temperature, java.lang.Float acceleration, java.lang.Float velocity, java.util.List<java.lang.Float> accelerometer, java.util.List<java.lang.Float> magneticField, java.util.List<java.lang.Float> orientation) {
+    this.id = id;
+    this.temperature = temperature;
+    this.acceleration = acceleration;
+    this.velocity = velocity;
+    this.accelerometer = accelerometer;
+    this.magneticField = magneticField;
+    this.orientation = orientation;
+  }
+
+  public org.apache.avro.Schema getSchema() { return SCHEMA$; }
+  // Used by DatumWriter.  Applications should not call.
+  public java.lang.Object get(int field$) {
+    switch (field$) {
+    case 0: return id;
+    case 1: return temperature;
+    case 2: return acceleration;
+    case 3: return velocity;
+    case 4: return accelerometer;
+    case 5: return magneticField;
+    case 6: return orientation;
+    default: throw new org.apache.avro.AvroRuntimeException("Bad index");
+    }
+  }
+----
+
+The target class will have a `getSchema()` method that returns the original schema,
+this can be handy when dealing with `SpecificDatumReaders`
+
+You can then use the `SpecificDatumWriter` to serialize this class
+[source,java]
+----
+Sensor sensor = Sensor.newBuilder().build();
+SpecificDatumWriter<Sensor> writer = new SpecificDatumWriter<>(Sensor.class);
+DataFileWriter<Sensor> dataFileWriter = new DataFileWriter<>(writer);
+dataFileWriter.create(sensor.getSchema(),new File("sensors.dat"));
+dataFileWriter.append(sensor);
+dataFileWriter.close();
+----
+
+==== When to use this approach
+This should be your preferred approach when you are the `Source` of data. When writing a
+new `Source` class in Spring Cloud Stream, there's no reason why you shouldn't use generated classes.
+
+=== No generated sources with Generic writer
+
+Another approach is when you don't want (or can't) have the sources generated from the schema.
+Avro provides a `GenericRecord` that works as a container, you can put entries on it, and
+it will validate them according to the schema. You will gain the flexibility of not depending on
+compiled classes.
+
+[source,java]
+----
+Schema.Parser parser = new Schema.Parser();
+Schema schema = parser.parse("sensor.avsc");
+GenericRecord sensor = new GenericData.Record(schema);
+sensor.put("temperature",21.5);
+sensor.put("acceleration",3.7);
+GenericDatumWriter<GenericRecord> writer = new GenericDatumWriter<>(schema);
+DataFileWriter<GenericRecord> dataFileWriter = new DataFileWriter<>(writer);
+dataFileWriter.create(schema,new File("sensors.dat"));
+dataFileWriter.append(sensor);
+dataFileWriter.close();
+----
+
+==== When to use this approach
+This is a good approach to use on you middle transformation tier. This would give you
+the maximum flexibility when it comes to schema changes, as we will see on the demo later on this tutorial.
+
+=== No generated sources and Reflection based writer

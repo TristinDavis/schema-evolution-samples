@@ -12,11 +12,6 @@
 	<artifactId>avro-codec</artifactId>
 	<version>1.0.0.BUILD-SNAPSHOT</version>
 	<dependencies>
-		<dependency>
-			<groupId>org.apache.avro</groupId>
-			<artifactId>avro</artifactId>
-			<version>${avro.version}</version>
-		</dependency>
 
 	</dependencies>
 
