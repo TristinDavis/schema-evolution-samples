@@ -1,8 +1,5 @@
 = Spring cloud stream schema evolution samples
-:library: Asciidoctor
-:idprefix:
-:numbered:
-:toc: manual
+:toc:
 :toc-placement: preamble
 
 == Introduction
