@@ -1,6 +1,10 @@
 = Spring cloud stream schema evolution samples
+:library: Asciidoctor
+:idprefix:
+:numbered:
 :toc: manual
 :toc-placement: preamble
+
 == Introduction
 
 The goal of this tutorial is to discuss approaches to achieve resilient data microservices (or data streams)
@@ -201,3 +205,15 @@ This is a good approach to use on you middle transformation tier. This would giv
 the maximum flexibility when it comes to schema changes, as we will see on the demo later on this tutorial.
 
 === No generated sources and Reflection based writer
+
+== Writing an Avro Codec for Spring Cloud Stream
+
+== How to resolve Schemas?
+
+=== What about local Schemas
+
+== Our first sensor stream
+
+== The reader/writer mismatch
+
+== Looking beyond Avro
