@@ -1,5 +1,5 @@
 = Spring cloud stream schema evolution samples
-:toc: 
+:toc:
 :toc-placement: preamble
 == Introduction
 
@@ -177,10 +177,9 @@ new `Source` class in Spring Cloud Stream, there's no reason why you shouldn't u
 
 === No generated sources with Generic writer
 
-Another approach is when you don't want (or can't) have the sources generated from the schema.
-Avro provides a `GenericRecord` that works as a container, you can put entries on it, and
-it will validate them according to the schema. You will gain the flexibility of not depending on
-compiled classes.
+Another approach that offers a great deal of flexibility while respecting the schema for type validation is
+to use a `GenericRecord`. It works as a container, you can put entries on it, and
+it will validate them according to the schema. With this approach you don't need to generate classes.
 
 [source,java]
 ----
@@ -201,6 +200,25 @@ This is a good approach to use on you middle transformation tier. This would giv
 the maximum flexibility when it comes to schema changes, as we will see on the demo later on this tutorial.
 
 === No generated sources and Reflection based writer
+
+Another approach is to have a Pojo mapped to your schema and use a `ReflectDatumWriter`.
+
+[source,java]
+----
+Schema.Parser parser = new Schema.Parser();
+Schema schema = parser.parse("tweet.avsc");
+Tweet tweet = new Tweet();
+ReflectDatumWriter<Tweet> writer = new ReflectDatumWriter<>(schema);
+DataFileWriter<Tweet> dataFileWriter = new DataFileWriter<>(writer);
+dataFileWriter.append(tweet);
+dataFileWriter.close();
+----
+
+==== When to use this approach
+This approach is good when you can't generate classes, an example is if you need
+to integrate with a third party framework. Imagine if you want to use a Twitter framework
+to receive tweets and just serialize them without having to deal with any mapping between
+the framework type and your own type.
 
 == Writing an Avro Codec for Spring Cloud Stream
 

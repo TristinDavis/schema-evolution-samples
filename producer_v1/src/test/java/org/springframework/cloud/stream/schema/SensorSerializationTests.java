@@ -8,6 +8,7 @@ import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.generic.GenericRecord;
+import org.apache.avro.reflect.ReflectDatumWriter;
 import org.apache.avro.specific.SpecificDatumWriter;
 
 /**
@@ -34,6 +35,16 @@ public class SensorSerializationTests {
 		DataFileWriter<GenericRecord> dataFileWriter = new DataFileWriter<>(writer);
 		dataFileWriter.create(schema,new File("sensors.dat"));
 		dataFileWriter.append(sensor);
+		dataFileWriter.close();
+	}
+
+	public void reflectSerializer() throws Exception{
+		Schema.Parser parser = new Schema.Parser();
+		Schema schema = parser.parse("sensor.avsc");
+		Tweet tweet = new Tweet();
+		ReflectDatumWriter<Tweet> writer = new ReflectDatumWriter<>(schema);
+		DataFileWriter<Tweet> dataFileWriter = new DataFileWriter<>(writer);
+		dataFileWriter.append(tweet);
 		dataFileWriter.close();
 	}
 }
