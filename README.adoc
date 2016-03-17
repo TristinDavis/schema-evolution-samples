@@ -1,4 +1,5 @@
 = Spring cloud stream schema evolution samples
+:toc: macro
 
 == Introduction
 
