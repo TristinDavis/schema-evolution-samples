@@ -38,13 +38,5 @@ public class SensorSerializationTests {
 		dataFileWriter.close();
 	}
 
-	public void reflectSerializer() throws Exception{
-		Schema.Parser parser = new Schema.Parser();
-		Schema schema = parser.parse("sensor.avsc");
-		Tweet tweet = new Tweet();
-		ReflectDatumWriter<Tweet> writer = new ReflectDatumWriter<>(schema);
-		DataFileWriter<Tweet> dataFileWriter = new DataFileWriter<>(writer);
-		dataFileWriter.append(tweet);
-		dataFileWriter.close();
-	}
+
 }

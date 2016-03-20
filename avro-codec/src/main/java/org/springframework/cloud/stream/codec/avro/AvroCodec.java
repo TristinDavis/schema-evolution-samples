@@ -35,18 +35,18 @@ public class AvroCodec implements Codec {
 	@Override
 	public void encode(Object object, OutputStream outputStream) throws IOException {
 		Schema schema = getSchema(object);
-
-		DatumWriter writer = getDatumWriter(object.getClass());
+		Integer id = schemaRegistryClient.register(schema);
+		DatumWriter writer = getDatumWriter(object.getClass(),schema);
 		Encoder encoder = EncoderFactory.get().binaryEncoder(outputStream, null);
-
-
+		outputStream.write(ByteBuffer.allocate(4).putInt(id).array());
+		writer.write(object,encoder);
+		encoder.flush();
 	}
 
 	@Override
 	public byte[] encode(Object o) throws IOException {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		encode(o,baos);
-
 		return baos.toByteArray();
 	}
 
@@ -62,15 +62,15 @@ public class AvroCodec implements Codec {
 		ByteBuffer buf = ByteBuffer.wrap(bytes);
 		byte[] payload = new byte[bytes.length-4];
 		Integer schemaId = buf.getInt();
-		Schema schema = getSchema(schemaId);
+		Schema schema = schemaRegistryClient.fetch(schemaId);
 		return null;
 	}
 
-	private DatumWriter getDatumWriter(Class<?> type){
-		return (GenericRecord.class.isAssignableFrom(type)) ? new GenericDatumWriter<>() : new SpecificDatumWriter(type);
+	private DatumWriter getDatumWriter(Class<?> type, Schema schema){
+		return (GenericRecord.class.isAssignableFrom(type)) ? new GenericDatumWriter<>(schema) : new SpecificDatumWriter(schema);
 	}
 
-	private DatumReader getDatumReader(Class<?> type){
+	private DatumReader getDatumReader(Class<?> type, Schema reader, Schema writer){
 		return (GenericRecord.class.isAssignableFrom(type)) ? new GenericDatumReader<>() : new SpecificDatumReader<>(type);
 	}
 

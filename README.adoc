@@ -58,6 +58,8 @@ Textual representations such as XML and JSON can deal quite easily with '2', as 
 versions of your services could simply ignore the new fields. Dealing with removal and alias is sometimes more
 complex on those encodings.
 
+`note this may not work, need to refine the example`
+
 == Avro serialization recap
 
 At it's core, avro relies on a schema definition file in order to be able to read and write data. The schema definition
@@ -221,6 +223,64 @@ to receive tweets and just serialize them without having to deal with any mappin
 the framework type and your own type.
 
 == Writing an Avro Codec for Spring Cloud Stream
+
+Spring Cloud Stream uses a codec abstraction to serialize data that is written/read from the channels. The interface is listed bellow
+[source,java]
+----
+public interface Codec {
+
+void encode(Object object, OutputStream outputStream) throws IOException;
+
+byte[] encode(Object object) throws IOException;
+
+<T> T decode(InputStream inputStream, Class<T> type) throws IOException;
+
+<T> T decode(byte[] bytes, Class<T> type) throws IOException;
+
+}
+----
+
+Let's start with the format. Since we own both encoding and decoding parts
+it means we can add more information on the wire to help us out figure out how to
+read/write data.
+
+A common pattern on binary protocols is to write a few bytes before the payload that can help us
+identify the data that is about to be read. If you look at https://cwiki.apache.org/confluence/display/KAFKA/A+Guide+To+The+Kafka+Protocol#AGuideToTheKafkaProtocol-Requests[Kafka message protocol] for example, it uses
+ApiKey an ApiVersion as bytes in the beginning of the message.
+
+This is where a schema repository comes in hand. As discussed by https://martin.kleppmann.com/2012/12/05/schema-evolution-in-avro-protocol-buffers-thrift.html[Martin Kleppmann : schema-evolution-in-avro-protocol-buffers-thrift] and also proposed on https://issues.apache.org/jira/browse/AVRO-1124[AVRO-1124].
+
+The basic idea is that your component should register automatically the schema during startup (much like http://cloud.spring.io/spring-cloud-netflix/[Spring Cloud Eureka] does ), by doing this, you should have an unique number that identifies your schema, and you can then use it to add to the message payload.
+
+With this in mind the `encoding` piece would look like this
+
+[source,java]
+----
+@Override
+public void encode(Object object, OutputStream outputStream) throws IOException {
+  Schema schema = getSchema(object); #<1>
+  Integer id = schemaRegistryClient.register(schema); #<2>
+  DatumWriter writer = getDatumWriter(object.getClass(),schema); #<3>
+  Encoder encoder = EncoderFactory.get().binaryEncoder(outputStream, null);
+  outputStream.write(ByteBuffer.allocate(4).putInt(id).array());
+  writer.write(object,encoder);
+  encoder.flush();
+}
+
+@Override
+public byte[] encode(Object o) throws IOException {
+  ByteArrayOutputStream baos = new ByteArrayOutputStream();
+  encode(o,baos);
+  return baos.toByteArray();
+}
+----
+<1> If we are using `GenericRecord` or a generated class, obtaining a schema is easy, since we just need to call the `getSchema` method of the object. If we
+are using Reflection, than a local schema cache needs to exist. We can leverage Spring Boot Auto configuration to register all schema files and map them to
+classes with the same namespace.
+
+<2> Registering a schema will return a new id in case of a new schema or the existing id of a pre-registered schema
+
+<3> To obtain the right `DatumWriter` we use the same logic as in <1> if it's a `GenericRecord` or `SpecificRecord` we use `GenericDatumWriter` or `SpecificDatumWriter` respectively, else we use `ReflectDatumWriter`
 
 == How to resolve Schemas?
 

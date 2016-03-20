@@ -9,8 +9,8 @@ import org.apache.avro.Schema;
  */
 public interface SchemaRegistryClient {
 
-	public Long register(Schema schema);
-	public Schema fetch(Long id);
+	public Integer register(Schema schema);
+	public Schema fetch(Integer id);
 	public List<Schema> find(Schema schema);
 	public List<Schema> find(String fqn);
 
