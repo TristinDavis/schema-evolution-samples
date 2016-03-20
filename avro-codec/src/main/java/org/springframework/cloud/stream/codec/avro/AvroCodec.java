@@ -13,10 +13,13 @@ import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.DatumWriter;
+import org.apache.avro.io.Decoder;
+import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.avro.specific.SpecificDatumWriter;
+import org.apache.avro.specific.SpecificRecord;
 import org.apache.commons.compress.utils.IOUtils;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +34,8 @@ public class AvroCodec implements Codec {
 
 	@Autowired
 	private SchemaRegistryClient schemaRegistryClient;
+
+	private Schema readerSchema;
 
 	@Override
 	public void encode(Object object, OutputStream outputStream) throws IOException {
@@ -62,16 +67,30 @@ public class AvroCodec implements Codec {
 		ByteBuffer buf = ByteBuffer.wrap(bytes);
 		byte[] payload = new byte[bytes.length-4];
 		Integer schemaId = buf.getInt();
+		buf.get(payload);
 		Schema schema = schemaRegistryClient.fetch(schemaId);
-		return null;
+		DatumReader reader = getDatumReader(type,schema);
+		Decoder decoder = DecoderFactory.get().binaryDecoder(payload,null);
+		return (T) reader.read(null,decoder);
 	}
 
 	private DatumWriter getDatumWriter(Class<?> type, Schema schema){
 		return (GenericRecord.class.isAssignableFrom(type)) ? new GenericDatumWriter<>(schema) : new SpecificDatumWriter(schema);
 	}
 
-	private DatumReader getDatumReader(Class<?> type, Schema reader, Schema writer){
-		return (GenericRecord.class.isAssignableFrom(type)) ? new GenericDatumReader<>() : new SpecificDatumReader<>(type);
+	private DatumReader getDatumReader(Class<?> type, Schema writer){
+		DatumReader reader = null;
+		if(GenericRecord.class.isAssignableFrom(type)){
+			reader = new GenericDatumReader<>(writer,getReaderSchema(writer));
+		}
+		else if(SpecificRecord.class.isAssignableFrom(type)){
+			reader = new SpecificDatumReader<>(writer,getReaderSchema(writer));
+		}
+		return reader;
+	}
+
+	private Schema getReaderSchema(Schema writerSchema){
+		return readerSchema != null ? readerSchema :writerSchema;
 	}
 
 	private Schema  getSchema(Object payload){

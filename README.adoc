@@ -282,6 +282,33 @@ classes with the same namespace.
 
 <3> To obtain the right `DatumWriter` we use the same logic as in <1> if it's a `GenericRecord` or `SpecificRecord` we use `GenericDatumWriter` or `SpecificDatumWriter` respectively, else we use `ReflectDatumWriter`
 
+The decoding process is very similar, on a reverse order now
+
+[source,java]
+----
+@Override
+public <T> T decode(InputStream inputStream, Class<T> type) throws IOException {
+	return decode(IOUtils.toByteArray(inputStream),type);
+}
+
+@Override
+public <T> T decode(byte[] bytes, Class<T> type) throws IOException {
+	Assert.notNull(bytes, "'bytes' cannot be null");
+	Assert.notNull(bytes, "Class can not be null");
+	ByteBuffer buf = ByteBuffer.wrap(bytes);
+	byte[] payload = new byte[bytes.length-4];
+	Integer schemaId = buf.getInt(); #<1>
+  buf.get(payload); #<2>
+	Schema schema = schemaRegistryClient.fetch(schemaId); #<3>
+	DatumReader reader = getDatumReader(type,schema);
+	Decoder decoder = DecoderFactory.get().binaryDecoder(payload,null);
+	return (T) reader.read(null,decoder);
+}
+----
+<1> First we find the schema id from the encoded data
+<2> Copy the remaining (payload) bytes
+<3> Retrieve the schema from the registry
+
 == How to resolve Schemas?
 
 === What about local Schemas
