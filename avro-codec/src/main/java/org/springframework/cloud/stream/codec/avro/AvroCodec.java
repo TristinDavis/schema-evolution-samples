@@ -29,6 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.stream.schema.SchemaNotFoundException;
 import org.springframework.cloud.stream.schema.SchemaRegistryClient;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.ResourcePatternResolver;
@@ -132,7 +133,7 @@ public class AvroCodec implements Codec {
 		}else{
 			Integer id = localSchemaMap.get(payload.getClass().getName());
 			if(id == null){
-				//TODO throw exception with schema not found
+				throw new SchemaNotFoundException(String.format("No schema found on local cache for %s",payload.getClass()));
 			}
 			schema = schemaRegistryClient.fetch(id);
 		}

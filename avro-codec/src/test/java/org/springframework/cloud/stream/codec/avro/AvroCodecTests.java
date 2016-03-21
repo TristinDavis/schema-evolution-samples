@@ -4,12 +4,15 @@ import example.avro.User;
 import org.apache.avro.Schema;
 import static org.mockito.Mockito.*;
 
+import java.util.ArrayList;
+
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericRecord;
 import org.junit.Assert;
 import org.junit.Test;
 
 import org.springframework.cloud.stream.samples.Status;
+import org.springframework.cloud.stream.schema.SchemaNotFoundException;
 import org.springframework.cloud.stream.schema.SchemaRegistryClient;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
@@ -162,6 +165,14 @@ public class AvroCodecTests extends AbstractAvroTestCase{
 		Assert.assertEquals(record.get("id").toString(),status.getId());
 	}
 
+	@Test(expected = SchemaNotFoundException.class)
+	public void localSchemaNotFound() throws Exception{
+		AvroCodec codec = new AvroCodec();
+		SchemaRegistryClient client = mock(SchemaRegistryClient.class);
+		codec.setSchemaRegistryClient(client);
+		codec.setResolver(new PathMatchingResourcePatternResolver(new AnnotationConfigApplicationContext()));
+		codec.encode(new ArrayList<>());
+	}
 
 
 
