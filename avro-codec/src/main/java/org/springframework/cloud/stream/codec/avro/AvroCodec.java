@@ -19,6 +19,7 @@ import org.apache.avro.io.Decoder;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
+import org.apache.avro.reflect.ReflectData;
 import org.apache.avro.reflect.ReflectDatumReader;
 import org.apache.avro.reflect.ReflectDatumWriter;
 import org.apache.avro.specific.SpecificDatumReader;
@@ -50,6 +51,8 @@ public class AvroCodec implements Codec {
 	private Map<String,Integer> localSchemaMap;
 
 	private Logger logger = LoggerFactory.getLogger(AvroCodec.class);
+
+	private AvroCodecProperties properties;
 
 	public AvroCodec(){
 		this.localSchemaMap = new ConcurrentHashMap<>();
@@ -133,7 +136,14 @@ public class AvroCodec implements Codec {
 		}else{
 			Integer id = localSchemaMap.get(payload.getClass().getName());
 			if(id == null){
-				throw new SchemaNotFoundException(String.format("No schema found on local cache for %s",payload.getClass()));
+				if(!properties.isDynamicSchemaGenerationEnabled()) {
+					throw new SchemaNotFoundException(String.format("No schema found on local cache for %s", payload.getClass()));
+				}
+				else{
+					Schema localSchema = ReflectData.get().getSchema(payload.getClass());
+					id = schemaRegistryClient.register(localSchema);
+				}
+
 			}
 			schema = schemaRegistryClient.fetch(id);
 		}
@@ -170,7 +180,13 @@ public class AvroCodec implements Codec {
 		this.readerSchema = readerSchema;
 	}
 
+	@Autowired
 	public void setResolver(ResourcePatternResolver resolver) {
 		this.resolver = resolver;
+	}
+
+	@Autowired
+	public void setProperties(AvroCodecProperties properties) {
+		this.properties = properties;
 	}
 }
