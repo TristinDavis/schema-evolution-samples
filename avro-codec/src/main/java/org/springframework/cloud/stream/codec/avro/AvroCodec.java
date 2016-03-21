@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericContainer;
@@ -17,13 +19,19 @@ import org.apache.avro.io.Decoder;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
+import org.apache.avro.reflect.ReflectDatumReader;
+import org.apache.avro.reflect.ReflectDatumWriter;
 import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.avro.specific.SpecificDatumWriter;
 import org.apache.avro.specific.SpecificRecord;
 import org.apache.commons.compress.utils.IOUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.stream.schema.SchemaRegistryClient;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.support.ResourcePatternResolver;
 import org.springframework.integration.codec.Codec;
 import org.springframework.util.Assert;
 
@@ -32,10 +40,19 @@ import org.springframework.util.Assert;
  */
 public class AvroCodec implements Codec {
 
-	@Autowired
 	private SchemaRegistryClient schemaRegistryClient;
 
 	private Schema readerSchema;
+
+	private ResourcePatternResolver resolver;
+
+	private Map<String,Integer> localSchemaMap;
+
+	private Logger logger = LoggerFactory.getLogger(AvroCodec.class);
+
+	public AvroCodec(){
+		this.localSchemaMap = new ConcurrentHashMap<>();
+	}
 
 	@Override
 	public void encode(Object object, OutputStream outputStream) throws IOException {
@@ -75,17 +92,30 @@ public class AvroCodec implements Codec {
 	}
 
 	private DatumWriter getDatumWriter(Class<?> type, Schema schema){
-		return (GenericRecord.class.isAssignableFrom(type)) ? new GenericDatumWriter<>(schema) : new SpecificDatumWriter(schema);
+		DatumWriter writer = null;
+		logger.debug("Finding correct DatumWriter for type {}",type.getName());
+		if(SpecificRecord.class.isAssignableFrom(type)){
+			writer = new SpecificDatumWriter<>(schema);
+		}else if(GenericRecord.class.isAssignableFrom(type)){
+			writer = new GenericDatumWriter<>(schema);
+		}else{
+			writer = new ReflectDatumWriter<>(schema);
+		}
+		logger.debug("DatumWriter of type {} selected",writer.getClass().getName());
+		return writer;
 	}
 
 	private DatumReader getDatumReader(Class<?> type, Schema writer){
 		DatumReader reader = null;
-		if(GenericRecord.class.isAssignableFrom(type)){
-			reader = new GenericDatumReader<>(writer,getReaderSchema(writer));
-		}
-		else if(SpecificRecord.class.isAssignableFrom(type)){
+		if(SpecificRecord.class.isAssignableFrom(type)){
 			reader = new SpecificDatumReader<>(writer,getReaderSchema(writer));
 		}
+		else if(GenericRecord.class.isAssignableFrom(type)){
+			reader = new GenericDatumReader<>(writer,getReaderSchema(writer));
+		}else{
+			reader = new ReflectDatumReader<>(writer,getReaderSchema(writer));
+		}
+
 		return reader;
 	}
 
@@ -94,9 +124,52 @@ public class AvroCodec implements Codec {
 	}
 
 	private Schema  getSchema(Object payload){
-		if(GenericContainer.class.isAssignableFrom(payload.getClass()))
-			return ((GenericContainer)payload).getSchema();
-		//else find schema from local avro files in resource, use class fqn to find which schema maps
-		return null;
+		Schema schema = null;
+		logger.debug("Obtaining schema for class {}", payload.getClass());
+		if(GenericContainer.class.isAssignableFrom(payload.getClass())) {
+			schema = ((GenericContainer) payload).getSchema();
+			logger.debug("Avro type detected, using schema from object");
+		}else{
+			Integer id = localSchemaMap.get(payload.getClass().getName());
+			if(id == null){
+				//TODO throw exception with schema not found
+			}
+			schema = schemaRegistryClient.fetch(id);
+		}
+
+		return schema;
+	}
+
+	public void init() {
+		logger.info("Scanning avro schema resources on classpath");
+		Schema.Parser parser = new Schema.Parser();
+		try {
+			Resource[] resources = resolver.getResources("*.avsc");
+			logger.info("Found {} schemas on classpath",resources.length);
+			for(Resource r : resources){
+				Schema s = parser.parse(r.getInputStream());
+				logger.info("Resource {} parsed into schema {}.{}",r.getFilename(), s.getNamespace(), s.getName());
+				Integer id = schemaRegistryClient.register(s);
+				logger.info("Schema {} registered with id {}",s.getName(),id);
+				localSchemaMap.put(s.getNamespace()+"."+s.getName(),id);
+			}
+		}
+		catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	@Autowired
+	public void setSchemaRegistryClient(SchemaRegistryClient schemaRegistryClient) {
+		this.schemaRegistryClient = schemaRegistryClient;
+	}
+
+	@Autowired
+	public void setReaderSchema(Schema readerSchema) {
+		this.readerSchema = readerSchema;
+	}
+
+	public void setResolver(ResourcePatternResolver resolver) {
+		this.resolver = resolver;
 	}
 }
