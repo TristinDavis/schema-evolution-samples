@@ -141,6 +141,7 @@ public class AvroCodecTests extends AbstractAvroTestCase{
 		AvroCodec codec = new AvroCodec();
 		codec.setSchemaRegistryClient(client);
 		codec.setResolver(new PathMatchingResourcePatternResolver(new AnnotationConfigApplicationContext()));
+		codec.setProperties(new AvroCodecProperties());
 		codec.init();
 		Status status = new Status("1","sample",System.currentTimeMillis());
 		byte[] results = codec.encode(status);
@@ -157,6 +158,7 @@ public class AvroCodecTests extends AbstractAvroTestCase{
 		AvroCodec codec = new AvroCodec();
 		codec.setSchemaRegistryClient(client);
 		codec.setResolver(new PathMatchingResourcePatternResolver(new AnnotationConfigApplicationContext()));
+		codec.setProperties(new AvroCodecProperties());
 		codec.init();
 		Status status = new Status("1","sample",System.currentTimeMillis());
 		byte[] results = codec.encode(status);
@@ -173,6 +175,7 @@ public class AvroCodecTests extends AbstractAvroTestCase{
 		AvroCodec codec = new AvroCodec();
 		codec.setSchemaRegistryClient(client);
 		codec.setResolver(new PathMatchingResourcePatternResolver(new AnnotationConfigApplicationContext()));
+		codec.setProperties(new AvroCodecProperties());
 		codec.init();
 		GenericRecord record = new GenericData.Record(schema);
 		record.put("id","1");
