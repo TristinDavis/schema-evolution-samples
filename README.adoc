@@ -329,37 +329,39 @@ public void encode(Object object, OutputStream outputStream) throws IOException 
 ...
 
 private Schema  getSchema(Object payload){
-  Schema schema = null;
-  logger.debug("Obtaining schema for class {}", payload.getClass());
-  if(GenericContainer.class.isAssignableFrom(payload.getClass())) { #<2>
-    schema = ((GenericContainer) payload).getSchema();
-    logger.debug("Avro type detected, using schema from object");
-  }else{ #<3>
-  Integer id = localSchemaMap.get(payload.getClass().getName());
-  			if(id == null){
-  				if(!properties.isDynamicSchemaGenerationEnabled()) {
-  					throw new SchemaNotFoundException(String.format("No schema found on local cache for %s", payload.getClass()));
-  				}
-  				else{
-  					Schema localSchema = ReflectData.get().getSchema(payload.getClass());
-  					id = schemaRegistryClient.register(localSchema);
-  				}
+		Schema schema = null;
+		logger.debug("Obtaining schema for class {}", payload.getClass());
+		if(GenericContainer.class.isAssignableFrom(payload.getClass())) { #<2>
+			schema = ((GenericContainer) payload).getSchema();
+			logger.debug("Avro type detected, using schema from object");
+		}else{ #<3>
+			Integer id = localSchemaMap.get(payload.getClass().getName()); #<4>
+			if(id == null){
+				if(!properties.isDynamicSchemaGenerationEnabled()) {
+					throw new SchemaNotFoundException(String.format("No schema found on local cache for %s", payload.getClass()));
+				}
+				else{
+					Schema localSchema = ReflectData.get().getSchema(payload.getClass()); #<5>
+					id = schemaRegistryClient.register(localSchema);
+				}
 
-  			}
-    schema = schemaRegistryClient.fetch(id);
-  }
+			}
+			schema = schemaRegistryClient.fetch(id);
+		}
 
-  return schema;
-}
+		return schema;
+	}
 ----
 <1> The first to do before serializing is finding the schema for the type
 <2> When the object to be serialized is an avro type, this is very simple as those types have the schema builtin with them
 <3> What about if we were using Refection and we don't have a generated source or a GenericRecord?
+<4> If any schema file (*.avsc) is detected on the classpath, we register those schemas with the registry and store locally using the FQN of the class as the key
+<5> When locating a schema, if the local schema is not found and we enabled dynamic schema generation we generate the schema during runtime using reflection and register it with the registry.
 
-In case of reflection we took the following approach:
 
-- If any schema file (*.avsc) is detected on the classpath, we register those schemas with the registry and store locally using the fQN of the class as the key
-- When locating a schema, if the local schema is not found and we enabled dynamic schema generation we generate the schema during runtime using reflection and register it with the registry.
+
+
+
 
 I don't believe that the dynamic schema generation to be a good idea, it can create schemas that are brittle and not ready for evolution (no default values, aliases or unions), hence why it's
 disabled by default, you should enable it with caution.

@@ -36,6 +36,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.ResourcePatternResolver;
 import org.springframework.integration.codec.Codec;
 import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 
 /**
  * @author Vinicius Carvalho
@@ -159,6 +160,9 @@ public class AvroCodec implements Codec {
 			logger.info("Found {} schemas on classpath",resources.length);
 			for(Resource r : resources){
 				Schema s = parser.parse(r.getInputStream());
+				if(!StringUtils.isEmpty(properties.getReaderSchema()) && properties.getReaderSchema().equals(s.getNamespace()+"."+s.getName())){
+					readerSchema = s;
+				}
 				logger.info("Resource {} parsed into schema {}.{}",r.getFilename(), s.getNamespace(), s.getName());
 				Integer id = schemaRegistryClient.register(s);
 				logger.info("Schema {} registered with id {}",s.getName(),id);
@@ -168,24 +172,21 @@ public class AvroCodec implements Codec {
 		catch (IOException e) {
 			e.printStackTrace();
 		}
+
 	}
 
-	@Autowired
 	public void setSchemaRegistryClient(SchemaRegistryClient schemaRegistryClient) {
 		this.schemaRegistryClient = schemaRegistryClient;
 	}
 
-	@Autowired
 	public void setReaderSchema(Schema readerSchema) {
 		this.readerSchema = readerSchema;
 	}
 
-	@Autowired
 	public void setResolver(ResourcePatternResolver resolver) {
 		this.resolver = resolver;
 	}
 
-	@Autowired
 	public void setProperties(AvroCodecProperties properties) {
 		this.properties = properties;
 	}
