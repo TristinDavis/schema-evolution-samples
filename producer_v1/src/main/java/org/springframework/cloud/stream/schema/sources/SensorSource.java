@@ -25,7 +25,7 @@ public class SensorSource {
 
 	@Bean
 	@InboundChannelAdapter(value = Source.OUTPUT, poller = @Poller(fixedDelay = "${fixedDelay}", maxMessagesPerPoll = "1"))
-	public MessageSource<Sensor> sensorSource(){
+	public MessageSource<Sensor> timeSensorSource(){
 		return () -> new GenericMessage<Sensor>(randomSensor());
 	}
 

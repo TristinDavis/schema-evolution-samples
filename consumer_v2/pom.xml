@@ -9,7 +9,7 @@
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
 
-	<artifactId>producer_v1</artifactId>
+	<artifactId>consumer_v2</artifactId>
 	<version>1.0.0.BUILD-SNAPSHOT</version>
 	<dependencies>
 		<dependency>
@@ -37,7 +37,7 @@
 							<goal>idl-protocol</goal>
 						</goals>
 						<configuration>
-							<sourceDirectory>src/main/avro</sourceDirectory>
+							<sourceDirectory>src/main/resources/avro</sourceDirectory>
 						</configuration>
 					</execution>
 				</executions>

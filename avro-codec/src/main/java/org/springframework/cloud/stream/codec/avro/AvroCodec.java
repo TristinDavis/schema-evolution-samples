@@ -156,11 +156,11 @@ public class AvroCodec implements Codec {
 		logger.info("Scanning avro schema resources on classpath");
 		Schema.Parser parser = new Schema.Parser();
 		try {
-			Resource[] resources = resolver.getResources("*.avsc");
+			Resource[] resources = resolver.getResources("classpath*:/**/*.avsc");
 			logger.info("Found {} schemas on classpath",resources.length);
 			for(Resource r : resources){
 				Schema s = parser.parse(r.getInputStream());
-				if(!StringUtils.isEmpty(properties.getReaderSchema()) && properties.getReaderSchema().equals(s.getNamespace()+"."+s.getName())){
+				if(!StringUtils.isEmpty(properties.getReaderSchema()) && properties.getReaderSchema().equals(s.getFullName())){
 					readerSchema = s;
 				}
 				logger.info("Resource {} parsed into schema {}.{}",r.getFilename(), s.getNamespace(), s.getName());

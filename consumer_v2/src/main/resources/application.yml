@@ -1,11 +1,12 @@
-fixedDelay: 15000
-
 spring:
   cloud:
     stream:
+      codec:
+        avro:
+          readerSchema: "io.igx.android.Sensor"
       bindings:
-        output:
-          destination: sensor-topic
+        input:
+         destination: sensor-topic
 confluent:
   schemaregistry:
     endpoint: http://192.168.99.100:8081
