@@ -14,6 +14,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
+import org.springframework.core.annotation.Order;
 import org.springframework.integration.codec.Codec;
 
 /**
@@ -38,14 +39,10 @@ public class AvroCodecAutoConfiguration {
 	@ConditionalOnProperty("confluent.schemaregistry.endpoint")
 	public SchemaRegistryClient confluentClient(@Value("${confluent.schemaregistry.endpoint}") String endpoint){
 		ConfluentSchemaRegistryClient registryClient = new ConfluentSchemaRegistryClient(endpoint);
-		return registryClient;
+		return new CachingSchemaRegistryClient(registryClient);
 	}
 
-	@Bean
-	@Primary
-	public SchemaRegistryClient schemaRegistryClient(SchemaRegistryClient client){
-		return new CachingSchemaRegistryClient(client);
-	}
+//
 
 
 }

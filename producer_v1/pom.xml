@@ -11,6 +11,13 @@
 
 	<artifactId>producer_v1</artifactId>
 	<version>1.0.0.BUILD-SNAPSHOT</version>
+	<dependencies>
+		<dependency>
+			<groupId>org.springframework.cloud.stream.schema</groupId>
+			<artifactId>avro-codec</artifactId>
+			<version>1.0.0.BUILD-SNAPSHOT</version>
+		</dependency>
+	</dependencies>
 	<build>
 		<plugins>
 			<plugin>

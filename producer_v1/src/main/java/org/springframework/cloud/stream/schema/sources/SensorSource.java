@@ -22,6 +22,7 @@ import org.springframework.messaging.support.GenericMessage;
 public class SensorSource {
 
 	private Random random = new Random();
+
 	@Bean
 	@InboundChannelAdapter(value = Source.OUTPUT, poller = @Poller(fixedDelay = "${fixedDelay}", maxMessagesPerPoll = "1"))
 	public MessageSource<Sensor> sensorSource(){
