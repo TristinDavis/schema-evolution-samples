@@ -1,5 +1,4 @@
 = Spring cloud stream schema evolution samples image:https://travis-ci.org/viniciusccarvalho/schema-evolution-samples.svg?branch=master[]
-
 :toc:
 :toc-placement: preamble
 == Introduction
