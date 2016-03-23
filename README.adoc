@@ -364,6 +364,11 @@ disabled by default, you should enable it with caution.
 
 == Our first sensor stream
 
+The modules `producer_v1, producer_v2, consumer_v1, consumer_v2` contains sample applications that can be run to demonstrate the schema evolution capabilities when using the registry and a codec.
+
+You will need a confluent schema registry up and running for those to run, please look https://github.com/confluentinc/docker-images[here] on how to setup docker images that bootstrap the schema registry.
+
+
 == The reader/writer mismatch
 
 == Looking beyond Avro
