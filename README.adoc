@@ -34,26 +34,27 @@ public class Sensor {
 ----
 public class Sensor {
 	private String id;
-	private float temperature;
-	private float externalTemperature; #<1>
+	private float internaltemperature; #<1>
+	private float externalTemperature; #<2>
 	private float velocity;
 	private float acceleration;
 	private float[] accelerometer;
-	private float[] magneticField; #<2>
+	private float[] magneticField; #<3>
 
 }
 ----
-
-<1> An extra field has been added
-<2> The field orientation has been deprecated and its missing
+<1> Field name change
+<2> An extra field has been added
+<3> The field orientation has been deprecated and its missing
 
 In order to our system to be resilient to these changes it needs to be able to react
 to three different changes on our model:
 
 
-1. Field addition
-2. Field removal
-3. Field name change (this can break forward compatibility)
+1. Field name change (this can break forward compatibility)
+2. Field addition
+3. Field removal
+
 
 Textual representations such as XML and JSON can deal quite easily with '2', as previous
 versions of your services could simply ignore the new fields. Dealing with removal and alias is sometimes more
@@ -356,10 +357,6 @@ private Schema  getSchema(Object payload){
 <3> What about if we were using Refection and we don't have a generated source or a GenericRecord?
 <4> If any schema file (*.avsc) is detected on the classpath, we register those schemas with the registry and store locally using the FQN of the class as the key
 <5> When locating a schema, if the local schema is not found and we enabled dynamic schema generation we generate the schema during runtime using reflection and register it with the registry.
-
-
-
-
 
 
 I don't believe that the dynamic schema generation to be a good idea, it can create schemas that are brittle and not ready for evolution (no default values, aliases or unions), hence why it's
