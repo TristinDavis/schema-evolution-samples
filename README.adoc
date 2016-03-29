@@ -369,6 +369,22 @@ The modules `producer_v1, producer_v2, consumer_v1, consumer_v2` contains sample
 You will need a confluent schema registry up and running for those to run, please look https://github.com/confluentinc/docker-images[here] on how to setup docker images that bootstrap the schema registry.
 
 
-== The reader/writer mismatch
+== Avro vs JSON
 
-== Looking beyond Avro
+What's the fun of writing a blog post if you can't write your own biased benchmarks?
+
+Just for fun I ran a few tests of Avro vs JSON (using Jackson), you can see the results bellow
+
+.Avro vs JSON (Object size)
+|===
+| Domain  2+| size in bytes
+| | Avro | JSON
+| Sensor | 94 | 237
+| Tweet Status | 847 | 3517
+|===
+
+.Avro vs JSON (Serialization time)
+|===
+| Domain 4+| Average time in nanoseconds
+| | Avro read | Avro write | JSON read | JSON write
+| Sensor | 1333 | 1300 | 3433 | 3483
