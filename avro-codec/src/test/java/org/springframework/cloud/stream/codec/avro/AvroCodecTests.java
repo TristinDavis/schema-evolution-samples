@@ -218,5 +218,12 @@ public class AvroCodecTests extends AbstractAvroTestCase{
 		Assert.assertEquals(account.getId(), decoded.getId());
 	}
 
+	@Test
+	public void schemaResolveTest() throws Exception {
+		User user = new User();
+		Class aClass = user.getClass();
+		Schema schema = ((GenericRecord)aClass.newInstance()).getSchema();
+		System.out.println(schema);
+	}
 
 }

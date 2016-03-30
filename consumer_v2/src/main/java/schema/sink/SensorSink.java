@@ -5,6 +5,7 @@ import org.springframework.cloud.stream.annotation.StreamListener;
 import org.springframework.cloud.stream.messaging.Sink;
 
 import io.igx.android.Sensor;
+import org.apache.avro.generic.GenericRecord;
 
 /**
  * @author Vinicius Carvalho
@@ -13,7 +14,7 @@ import io.igx.android.Sensor;
 public class SensorSink {
 
 	@StreamListener(Sink.INPUT)
-	public void process(Sensor data){
+	public void process(GenericRecord data){
 		System.out.println(data);
 
 	}
