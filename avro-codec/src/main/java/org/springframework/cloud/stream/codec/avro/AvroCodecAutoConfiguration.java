@@ -2,33 +2,24 @@ package org.springframework.cloud.stream.codec.avro;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.Collections;
 
 import org.apache.avro.io.DatumWriter;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.stream.converter.AbstractFromMessageConverter;
-import org.springframework.cloud.stream.converter.CompositeMessageConverterFactory;
-import org.springframework.cloud.stream.converter.MessageConverterUtils;
-import org.springframework.cloud.stream.converter.avro.AvroMessageConverter;
 import org.springframework.cloud.stream.schema.CachingSchemaRegistryClient;
 import org.springframework.cloud.stream.schema.ConfluentSchemaRegistryClient;
 import org.springframework.cloud.stream.schema.SchemaRegistryClient;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
-import org.springframework.core.annotation.Order;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.integration.codec.Codec;
 import org.springframework.messaging.Message;
-import org.springframework.messaging.MessageHeaders;
 import org.springframework.util.MimeType;
-import org.springframework.util.MimeTypeUtils;
 
 /**
  * @author Vinicius Carvalho

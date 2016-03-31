@@ -1,0 +1,127 @@
+:toc:
+:toc-placement: preamble
+== Introduction
+
+The Spring-Cloud-Stream-Schema-Avro  module adds schema evolution support to your
+SCSt module using avro serializer.
+
+Add a dependency to the module on your application:
+
+[source,xml]
+----
+<dependency>
+ <groupId>org.springframework.cloud.stream.schema</groupId>
+ <artifactId>avro-codec</artifactId>
+ <version>1.0.0.BUILD-SNAPSHOT</version>
+</dependency>
+----
+
+=== Configuration
+
+The module uses Spring boot auto configuration capabilities and it will bootstrap when it detects
+ avro jars  on the classpath.
+
+You need to set the `Content-Type` property of your outputs in order to enable the `MessageConverter`
+
+[source,yml]
+----
+spring:
+  cloud:
+    stream:
+      bindings:
+        output:
+          destination: sensor-topic
+          contentType: "avro/binary"
+----
+
+=== Configuring the Schema registry
+
+The modules requires a schema registry available to register and fetch schemas in order to encode/decode
+the payload.
+
+For now, only http://docs.confluent.io/2.0.1/schema-registry/docs/intro.html[Confluent Schema Registry] is supported.
+
+Configure it using a property on your application.yml
+
+[source,yml]
+
+----
+confluent:
+  schemaregistry:
+    endpoint: http://192.168.99.100:8081
+----
+
+== Usage
+
+The module supports three types of objects when serializing data, to understand how avro works with serialization
+please look http://avro.apache.org/docs/1.8.0/gettingstartedjava.html[here]
+
+1. SpecificRecord entities: Those are generated from an avro schema
+2. GenericRecord entities: It's a container that uses a schema internally to validate fields and process serialization
+3. Any Java Pojo: Using reflection
+
+=== Sources
+
+You need to set the `Content-Type` for sources.
+
+==== SpecificRecord
+
+If you are using SpecificRecord, then the module can retrieve the schema from the object, so no other configuration is needed.
+
+==== GenericRecord
+
+Much like with `SpecificRecord`, the module can fetch the schema from those objects
+
+==== Pojos using reflection
+
+If you decide to use pojos using reflection instead, the module supports two approaches:
+
+*Using a schema file*
+
+You need an avro schema file (*.avsc) on your classpath for each entity you want to use with reflection.
+The module maps the pojo entity and the schema file using the fully qualified name of the class and the
+schema fullname (namespace + name)
+
+*Dynamic generation of schema*
+
+It's possible to enable dynamic schema generation (*not recommended*). But if this is what you want enable it on your
+application.yml
+
+[source,yml]
+----
+spring:
+  cloud:
+    stream:
+      codec:
+        avro:
+          dynamicSchemaGeneration: true
+----
+
+`Please note that any schema generated dynamically will be registered with the schema registry`
+
+=== Sinks
+
+You *don't* need to configure a `Content-Type` for Sinks, the module uses information at the message headers
+to enable deserialization.
+
+But since Avro support schema evolution, for readers there's always the concept of the writer and the reader schema.
+
+By default, a Sink will always be configured to use the same schema as the writer (from the message payload). If you want to
+set a sink to use a specific schema, you can configure this at the application.yml file
+
+[source,yml]
+----
+spring:
+  cloud:
+    stream:
+      codec:
+        avro:
+          readerSchema: "org.springframework.cloud.stream.samples.User"
+
+----
+
+=== Processor
+Processors are a mix of Sink and Sources, so anything that applies for those types can be used here.
+
+Processors can be configured with `readerSchema` for the input part. If you a changing the payload from A -> B, you can also
+configure dynamic schema generation.

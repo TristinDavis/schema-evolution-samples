@@ -1,9 +1,7 @@
 spring:
   cloud:
     stream:
-      codec:
-        avro:
-          readerSchema: "io.igx.android.Sensor"
+
       bindings:
         input:
          destination: sensor-topic

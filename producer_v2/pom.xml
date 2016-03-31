@@ -11,6 +11,24 @@
 
 	<artifactId>producer_v2</artifactId>
 	<version>1.0.0.BUILD-SNAPSHOT</version>
+	<dependencies>
+		<dependency>
+			<groupId>org.springframework.cloud.stream.schema</groupId>
+			<artifactId>avro-codec</artifactId>
+			<version>1.0.0.BUILD-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-stream-binder-rabbit</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-math3</artifactId>
+			<version>3.6</version>
+			<scope>test</scope>
+		</dependency>
+
+	</dependencies>
 	<build>
 		<plugins>
 			<plugin>

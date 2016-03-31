@@ -19,7 +19,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(ConfluentSchemaClientApplication.class)
-@IntegrationTest({ "confluent.schemaregistry.endpoint: http://localhost:8081" })
+@IntegrationTest({ "confluent.schemaregistry.endpoint: http://192.168.99.100:8081" })
 @DirtiesContext
 public class ConfluentSchemaClientIntegrationIT extends AbstractAvroTestCase{
 
