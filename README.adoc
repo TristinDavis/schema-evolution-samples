@@ -69,8 +69,17 @@ that are using a newer version
 We can say that schemas are fully compatible if given a set of Schemas { v~1~, v~2~,...,v~n~}, any given version
 can read from any other combination on the set.
 
+=== Design guidelines
 
+To support the compatibility modes described above, the schema evolution should be treated as a design time decision.
+Today most developers see it as an afterthought, only to realize later that version maintenance can become a real pain.
 
+You have to make sure you pick the right serialization framework to support schema evolution. Most java frameworks will
+allow at least one form of the modes described above.
+
+The essential component on a distributed data oriented microservices deployment is the schema registry. Not only it will store and version
+all the schemas used on your deployment, but it can also work as a design validation tool, one that would not enable the inclusion of new schemas
+if they clash with previous versions in use. This can be a great asset when planning to migrate versions of your services.
 
 
 == Avro serialization recap
