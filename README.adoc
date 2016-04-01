@@ -47,18 +47,29 @@ public class Sensor {
 <2> An extra field has been added
 <3> The field orientation has been deprecated and its missing
 
-In order to our system to be resilient to these changes it needs to be able to react
-to three different changes on our model:
+== Schema evolution recap
+
+_"Schema evolution refers to the problem of evolving a database schema to adapt it to a change in the modeled reality"_ https://en.wikipedia.org/wiki/Schema_evolution[Wikipedia]
+
+There's three main patterns for schema evolution: Backward compatibility, forward compatibility, full compatibility
+
+=== Backward Compatibility
+
+In this case, a reader using a newer schema version should be capable of reading data written with an
+older version.
 
 
-1. Field name change (this can break forward compatibility)
-2. Field addition
-3. Field removal
+=== Forward Compatibility
+
+On this scenario, a data service written using an older schema should be able to read data from producers
+that are using a newer version
+
+=== Full Compatibility
+
+We can say that schemas are fully compatible if given a set of Schemas { v~1~, v~2~,...,v~n~}, any given version
+can read from any other combination on the set.
 
 
-Textual representations such as XML and JSON can deal quite easily with '2', as previous
-versions of your services could simply ignore the new fields. Dealing with removal and alias is sometimes more
-complex on those encodings.
 
 
 
@@ -380,7 +391,7 @@ Just for fun I ran a few tests of Avro vs JSON (using Jackson), you can see the 
 | Domain  2+| size in bytes
 | | Avro | JSON
 | Sensor | 94 | 237
-| Tweet Status | 847 | 3517
+| Twitter Status | 847 | 3517
 |===
 
 .Avro vs JSON (Serialization time)
