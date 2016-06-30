@@ -7,13 +7,14 @@
 	<groupId>org.springframework.cloud.stream.schema</groupId>
 	<artifactId>schema-evolution</artifactId>
 	<packaging>pom</packaging>
-	<version>1.0.0.BUILD-SNAPSHOT</version>
+	<version>1.0.0.M1</version>
 	<modules>
 		<module>producer_v1</module>
 		<module>producer_v2</module>
 		<module>avro-codec</module>
 		<module>consumer_v1</module>
 		<module>consumer_v2</module>
+		<module>avro-converter</module>
 	</modules>
 	<parent>
 		<groupId>org.springframework.cloud</groupId>

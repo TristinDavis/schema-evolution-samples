@@ -1,4 +1,7 @@
 spring:
+  rabbitmq:
+    host: localhost
+    port: 16001
   cloud:
     stream:
       codec:
@@ -7,8 +10,9 @@ spring:
       bindings:
         input:
          destination: sensor-topic
-confluent:
-  schemaregistry:
-    endpoint: http://192.168.99.100:8081
+
+#confluent:
+#  schemaregistry:
+#    endpoint: http://192.168.99.100:8081
 server:
   port: 0
